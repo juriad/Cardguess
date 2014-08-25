@@ -1,9 +1,11 @@
 module Cardguess (initialGuess, nextGuess, GameState(..)) where
 
 import Common
-import Feedback
 import Optimalguess
 
+
+-- | Returns the first response based on number of cards in answer.
+-- The results are proven to be optimal in temrs of distribution of possible answers into small groups.
 initialGuess :: Int -> Response
 initialGuess n
         | n == 0 = ([], state) -- empty
@@ -13,12 +15,14 @@ initialGuess n
         | n == 4 = ([Card Club R5, Card Club R9, Card Diamond R9, Card Diamond R10], state) -- 5C 9C 9D TD
         | otherwise = error "Oops, that's too much for me"
         where
-                all = subsets deck n -- all possible answers
-                state = GameState all
+                allSels = subsets deck n -- all possible answers
+                state = GameState allSels
 
+-- | Returns next response based on previous response and its rating.
+-- The next response is chosen carefuly trying to optimize distribution of possible answers.
 nextGuess :: Response -> Feedback -> Response
 nextGuess (prevGuess, GameState prevOptions) feedback =
         let
-                options = filter (\ ans -> rateGuess ans prevGuess == feedback) prevOptions
-                guess = findBestGuess options in
-        (guess, GameState options)
+                options = filterOptions prevGuess feedback prevOptions
+                guess = findBestGuess options
+        in (guess, GameState options)

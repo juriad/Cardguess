@@ -2,7 +2,7 @@ all: cardguess
 
 cardguess:
 	rm -f *.o *.hi
-	ghc -O2 --make Test.hs -o cardguess
+	ghc -Wall -O2 --make Test.hs -o cardguess
 	rm -f *.o *.hi
 
 clean:

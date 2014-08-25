@@ -1,11 +1,13 @@
+.PHONY: all initial cardguess clean 
+
 all: initial cardguess
 
 initial:
-	gcc -O2 --std=gnu99 initial.c -o initial
+	${MAKE} -C innitial
 
 cardguess:
 	${MAKE} -C src
 
 clean:
-	rm -f initial
+	${MAKE} -C initial clean
 	${MAKE} -C src clean

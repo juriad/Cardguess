@@ -1,21 +1,22 @@
 module Feedback (rateGuess) where
 
--- type definitions
 import Common
+
+-- using map and sort would be an overkill in filterRank and filterSuit
 import Data.List (insert)
 
--- converts list of cards into sorted list of ranks
-filterRank :: Selection -> [Rank]
+
+-- | Converts list of cards into sorted list of ranks.
+filterRank :: [Card] -> [Rank]
 filterRank [] = []
 filterRank ((Card _ r) : cs) = insert r (filterRank cs)
 
--- converts list of cards into sorted list of suits
-filterSuit :: Selection -> [Suit]
+-- | Converts list of cards into sorted list of suits.
+filterSuit :: [Card] -> [Suit]
 filterSuit [] = []
 filterSuit ((Card s _) : cs) = insert s (filterSuit cs)
 
--- feedback for my guess against answer
--- this just composed a feedback touple out of values returned by particular functions
+-- | Provides feedback for my guess evaluated against answer.
 rateGuess :: Selection -> Selection -> Feedback
 rateGuess ans my = (rateCorrect ans my,
         rateLower ans my,
@@ -23,34 +24,34 @@ rateGuess ans my = (rateCorrect ans my,
         rateHigher ans my,
         rateSameSuit ans my)
 
--- returns number of correctly guessed cards
+-- | Returns number of correctly guessed cards.
 rateCorrect :: Selection -> Selection -> Int
 rateCorrect ans my = countMatching ans my
 
--- returns number of cards in answer which are lower than all cards in guess
+-- | Returns number of cards in answer which have lower rank than all cards in guess.
 rateLower :: Selection -> Selection -> Int
 rateLower ans my =
-        let min = head (filterRank my) in
-        length (filter (< min) (filterRank ans))
+        let minRank = head (filterRank my)
+        in length (filter (< minRank) (filterRank ans))
 
--- returns number of cards which have matching rank but not necessary suit
+-- | Returns number of cards which have matching rank but not necessary suit.
 rateSameRank :: Selection -> Selection -> Int
 rateSameRank ans my =
          let
                 smy = filterRank my
-                sans = filterRank ans in
-         countMatching smy sans
+                sans = filterRank ans
+         in countMatching smy sans
 
--- returns number of cards in answer which are higher than all cards in guess
+-- | Returns number of cards in answer which have higher rank than all cards in guess.
 rateHigher :: Selection -> Selection -> Int
 rateHigher ans my =
-        let max = last (filterRank my) in
-        length (filter (> max) (filterRank ans))
+        let maxRank = last (filterRank my)
+        in length (filter (> maxRank) (filterRank ans))
 
--- returns number of cards which have matching suit but not necessary rank
+-- | Returns number of cards which have matching suit but not necessary rank.
 rateSameSuit :: Selection -> Selection -> Int
 rateSameSuit ans my =
          let
                 smy = filterSuit my
-                sans = filterSuit ans in
-         countMatching smy sans
+                sans = filterSuit ans
+         in countMatching smy sans
