@@ -36,14 +36,18 @@ initialGuess n
     | n < 0 = error "You think that you are funny?"
     | otherwise = error "Oops, that's too much for me!"
     where
-        state = GameState $ subsets deck n -- all possible answers
+        state = GameState 1 (subsets deck n) -- all possible answers
 
 {- | Returns next response based on previous response and its rating.
     The next response is chosen carefully trying to optimize
     distribution of possible answers. -}
 nextGuess :: Response -> Feedback -> Response
-nextGuess (prevGuess, GameState prevOptions) feedback =
+nextGuess (prevGuess, GameState no prevOptions) feedback =
     let
         options = filterOptions prevGuess feedback prevOptions
-        (_, guess) = findBestGuess options
-    in (guess, GameState options)
+        guess = case no of
+            _
+                | no == 1 -> pickOptimal (length prevGuess) feedback
+                | no > 1 -> let (_, g) = findBestGuess options in g
+                | otherwise -> error "Round number must be positive integer!"
+    in (guess, GameState (no + 1) options)

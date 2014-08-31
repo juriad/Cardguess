@@ -2,6 +2,8 @@
 -- Author: Adam Juraszek
 -- Purpose: Executable read-eval-loop program useful for testing.
 
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 {- | The Main module which is used for testing and benchmarking the performance.
     When runs a read-eval-loop reacting to several commands:
     * i <RANK><SUIT> ... - interactive mode - guessing the input combination;
@@ -13,6 +15,7 @@ module Main (main) where
 import Cardguess
 import Common
 import Feedback
+import Optimalguess
 
 import Control.Exception (SomeException, catch)
 import Control.Monad (liftM, unless)
@@ -20,6 +23,15 @@ import Data.List (sort)
 import Data.Random (sampleState)
 import Data.Random.Extras (sample)
 import System.Random (StdGen, getStdRandom)
+import Text.PrettyPrint
+import Text.Show.Pretty
+
+
+{- | Ignore the orphan instance warning.
+    It must be here because we don't want the rest knowing about
+    pretty printing which is useful in this module. -}
+instance PrettyVal Card where
+    prettyVal (Card s r) = Con "Card" [String $ showSuit s, String $ showRank r]
 
 
 {- | Guesses the answer based on previous response in a loop
@@ -50,7 +62,21 @@ testGuess ws = do
     cards <- decodeCards ws
     print $ guessCards cards
 
--- | Converts 
+findOptimal :: [String] -> IO ()
+findOptimal [] = fail "findOptimal requires one integer argument"
+findOptimal (sn:_) = do
+    n <- readIO sn :: IO Int
+    let (initial, _) = initialGuess n
+    let allSels = subsets deck n
+    let feedbacks = [(a, b, c, d, e)
+            | let x = [0 .. n], a <- x, b <- x, c <- x, d <- x, e <-x ]
+    let result = [(f, best) | f <- feedbacks,
+            let options = filterOptions initial f allSels,
+            let (_, best) = findBestGuess options,
+            not $ null best]
+    putStrLn $ renderStyle (Style PageMode 200 1) (dumpDoc result)
+
+-- | Converts
 selectionToString :: Selection -> String
 selectionToString = unwords . map show
 
@@ -72,8 +98,9 @@ testRandom fn ws =
 
 -- | List of help messages.
 help :: [String]
-help = ["i CARD ... | r SIZE TRIES | s SIZE TRIES | h | q",
+help = ["i CARD ... | o SIZE | r SIZE TRIES | s SIZE TRIES | h | q",
     "Write i(nteractive) followed by list of up to four cards in format RS.",
+    "Write o(ptimal) followed by number of cards.",
     "Write r(andom) followed by number of cards and number of tries.",
     "Write s(ample) followed by number of cards and number of combinations.",
     "Write h(elp) for printing this help.",
@@ -101,10 +128,15 @@ readLoop = do
                 randomException ex = (ex :: SomeException) `seq`
                     putStrLn ("Wrong format: specify number of cards"
                         ++ " and number of tries separated by blanks.")
+                optimalException ex = (ex :: SomeException) `seq`
+                    putStrLn "Wrong format: specify number of cards"
             case m of
                 'i' -> catch (testGuess rest) interactiveException
-                'r' -> catch (testRandom (show .guessCards) rest) randomException
-                's' -> catch (testRandom selectionToString rest) randomException
+                'o' -> catch (findOptimal rest) optimalException
+                'r' -> catch (testRandom (show . guessCards) rest)
+                    randomException
+                's' -> catch (testRandom selectionToString rest)
+                    randomException
                 'h' -> printHelp
                 _ -> return ()
             unless (m == 'q') readLoop

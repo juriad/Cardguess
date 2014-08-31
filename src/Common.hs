@@ -23,12 +23,12 @@ type Feedback = (Int, Int, Int, Int, Int)
     selections from which the next guess is selected.
     Intended usage suppose repeated filtering of possible answers
     based on feedback given for previous guess. -}
-data GameState = GameState [Selection]
+data GameState = GameState Int [Selection]
 
 {- | GameState can be shown as a type name
     followed by number of remaining selections. -}
 instance Show GameState where
-    show (GameState xs) = "GameState(" ++ show (length xs) ++ ")"
+    show (GameState _ xs) = "GameState(" ++ show (length xs) ++ ")"
 
 {- | Response contains guess and GameState.
     Response is created by guesser and evaluated by answerer. -}
@@ -36,6 +36,24 @@ type Response = (Selection, GameState)
 
 -- | Result of guessing game is a list of Responses.
 type Result = [Response]
+
+
+showRank :: Rank -> String
+showRank r
+    | r <= R10 = "R" ++ show (fromEnum r + 2)
+    | r == Jack = "Jack"
+    | r == Queen = "Queen"
+    | r == King = "King"
+    | r == Ace = "Ace"
+    | otherwise = undefined
+    
+showSuit :: Suit -> String
+showSuit s
+    | s == Club = "Club"
+    | s == Diamond = "Diamond"
+    | s == Heart = "Heart"
+    | s == Spade = "Spade"
+    | otherwise = undefined
 
 
 {- | Generates a list of all subsets of given list which have given size.
