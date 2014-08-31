@@ -1,34 +1,47 @@
-module Optimalguess (findBestGuess, filterOptions) where
+-- File: Optimalguess.hs
+-- Author: Adam Juraszek
+-- Purpose: Algorithm which selects the optimal next guess.
+
+{- | Module Optimalguess provides functions which operate with list of all
+    possible answers.
+    The best next guess is found by testing responses to individual options.
+    The feedbacks are grouped and then the guess which minimize
+    the quadratic mean of groups' sizes is selected. -}
+module Optimalguess (findBestGuess, filterOptions, Rating) where
 
 import Common
 import Feedback
 
-import qualified Data.Map as Map
+-- should be better for arithmetic expression folding
+import Data.List (foldl1')
+import qualified Data.Map.Strict as Map
 
 
--- | Filters remaining possible answers according to feedback obtained for last guess.
+-- | Rating type; represents how good a guess is.
+type Rating = Int
+
+
+{- | Filters remaining possible answers according to feedback
+    which was obtained for last guess. -}
 filterOptions :: Selection -> Feedback -> [Selection] -> [Selection]
-filterOptions prevGuess feedback prevOptions =
-        filter (\ ans -> rateGuess ans prevGuess == feedback) prevOptions
+filterOptions prevGuess feedback =
+    filter (\ ans -> rateGuess ans prevGuess == feedback)
 
--- | Rates given guess based on possible feedback distribution prefering many small groups. 
--- Argument my plays the role of fixed guess which is compared with all possible answers.
--- There is no need to divide the sum of squares by sum of group sizes.
-rateGuessByExpectedAnswers :: Selection -> [Selection] -> Integer
-rateGuessByExpectedAnswers my answers = 
-        let groupedByFeedback = foldl (\ groups ans ->
-                Map.insertWith (+) (rateGuess my ans) 1 groups) Map.empty answers
-        in Map.fold (\ val acc -> acc + val * val) 0 groupedByFeedback
+{- | Rates given guess based on possible distribution of feedbacks
+    preferring guess with many small groups.
+    Returns an integer rating which we will want to minimize. -}
+rateGuessByExpectedAnswers :: Selection -> [Selection] -> Rating
+rateGuessByExpectedAnswers guess answers =
+    let groupedByFeedback =
+            Map.fromListWith (+) [(rateGuess guess ans, 1) | ans <- answers]
+    in Map.foldl' (\ val acc -> val * val + acc) 0 groupedByFeedback
 
--- | Returns the better one of two rated selections
-betterSelection :: (Selection, Integer) -> (Selection, Integer) -> (Selection, Integer)
-betterSelection s1@(_, rate1) s2@(_, rate2) =
-        if rate1 <= rate2 then s1 else s2
-
--- | Selects the best card combination to try 
-findBestGuess :: [Selection] -> Selection
-findBestGuess answers = 
-        let
-                rates = map (\ ans -> (ans, rateGuessByExpectedAnswers ans answers)) answers
-                (best, _) = foldl1 betterSelection rates
-        in best
+-- | Selects the best card combination to be used as our next guess.
+findBestGuess :: [Selection] -> (Rating, Selection)
+findBestGuess answers =
+    let
+        rates = [(rateGuessByExpectedAnswers ans answers, ans) | ans <- answers]
+        betterSelection s1@(rate1, _) s2@(rate2, _) =
+            if rate1 <= rate2 then s1 else s2
+    -- don't use minimum, that just kills the performance
+    in foldl1' betterSelection rates

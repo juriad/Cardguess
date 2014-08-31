@@ -3,11 +3,11 @@
 all: initial cardguess
 
 initial:
-	${MAKE} -C innitial
+	${MAKE} -C initial
 
 cardguess:
-	${MAKE} -C src
+	cabal build
 
 clean:
 	${MAKE} -C initial clean
-	${MAKE} -C src clean
+	cabal clean

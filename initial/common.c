@@ -1,6 +1,5 @@
 #include <stdlib.h>
 
-#include "config.h"
 #include "common.h"
 
 void makeCards(Card cards[]) {

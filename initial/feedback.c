@@ -1,6 +1,5 @@
 #include <stdlib.h>
 
-#include "config.h"
 #include "feedback.h"
 
 int feedbackCorrect(List* my, List* ans) {

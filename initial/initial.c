@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include <math.h>
 
-#define K 4
-
 #include "common.h"
 #include "feedback.h"
 
@@ -58,7 +56,6 @@ int main(int argc, char **argv) {
 
 	for (int i = 0; i < size; i++) {
 		List *l = sets[i];
-		//printf("%d / %d: %f \n", i, size, l->result);
 		if (l->flag) {
 			findBestFor(l, sets, size, 0);
 			double score = l->score;
