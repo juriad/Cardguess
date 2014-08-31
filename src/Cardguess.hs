@@ -4,7 +4,7 @@
 
 {- | Module Cardguess contains prescribed functions to solve the problem of
     finding selected cards (0-4) with minimal number of guesses.
-    The initial guess is precomputed by C program and is optimal
+    The first and second guess is precomputed by C program and is optimal
     in terms of distribution of feedbacks.
     The program keeps list of all possible options in its GameState object.
     The list is filtered according to response to the latest guess. -}
@@ -39,8 +39,8 @@ initialGuess n
         state = GameState 1 (subsets deck n) -- all possible answers
 
 {- | Returns next response based on previous response and its rating.
-    The next response is chosen carefully trying to optimize
-    distribution of possible answers. -}
+    The next response is chosen either from precomputed map (second guess)
+    or carefully trying to optimize distribution of possible answers. -}
 nextGuess :: Response -> Feedback -> Response
 nextGuess (prevGuess, GameState no prevOptions) feedback =
     let

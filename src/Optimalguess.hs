@@ -1,6 +1,6 @@
 -- File: Optimalguess.hs
 -- Author: Adam Juraszek
--- Purpose: Algorithm which selects the optimal next guess.
+-- Purpose: Algorithms which select the optimal next guess.
 
 {- | Module Optimalguess provides functions which operate with list of all
     possible answers.
@@ -33,6 +33,7 @@ filterOptions :: Selection -> Feedback -> [Selection] -> [Selection]
 filterOptions prevGuess feedback =
     filter (\ ans -> rateGuess ans prevGuess == feedback)
 
+-- | Selects the next guess from a map based on previous feedback.
 pickOptimal :: Int -> Feedback -> Selection
 pickOptimal n feedback =
     let optimal = case n of

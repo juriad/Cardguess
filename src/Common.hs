@@ -4,7 +4,7 @@
 
 {- | Module Common wraps module Card and adds several useful type definitions
     which are used in all other modules in order to simplify function types.
-    It also provides two functions which are used only once
+    It also provides four functions which are used only once
     but they seem to be useful for testing and debugging. -}
 module Common (module Card, module Common) where
 
@@ -38,6 +38,7 @@ type Response = (Selection, GameState)
 type Result = [Response]
 
 
+-- | Converts rank to its constructor; cannot use show.
 showRank :: Rank -> String
 showRank r
     | r <= R10 = "R" ++ show (fromEnum r + 2)
@@ -46,7 +47,8 @@ showRank r
     | r == King = "King"
     | r == Ace = "Ace"
     | otherwise = undefined
-    
+
+-- | Converts suit to its constructor; cannot use show.
 showSuit :: Suit -> String
 showSuit s
     | s == Club = "Club"
@@ -54,7 +56,6 @@ showSuit s
     | s == Heart = "Heart"
     | s == Spade = "Spade"
     | otherwise = undefined
-
 
 {- | Generates a list of all subsets of given list which have given size.
     Elements in subsets are ordered in the same way

@@ -7,8 +7,11 @@
 {- | The Main module which is used for testing and benchmarking the performance.
     When runs a read-eval-loop reacting to several commands:
     * i <RANK><SUIT> ... - interactive mode - guessing the input combination;
-    * r <#CARDS> <#TRIES> - guesses random <#TRIES> combinations of <#CARDS>
-    * h - prints help.
+    * o <#CARDS> - prints optimal second guesses as a template of OptimalN.hs;
+    * r <#CARDS> <#TRIES> - guesses random <#TRIES> combinations of <#CARDS>;
+    * s <#CARDS> <#TRIES> - prints random <#TRIES> combinations of <#CARDS>;
+    * h - prints help;
+    * q - quits the program.
     The loop ends when an empty line is entered. -}
 module Main (main) where
 
@@ -62,6 +65,7 @@ testGuess ws = do
     cards <- decodeCards ws
     print $ guessCards cards
 
+-- | Prints optimal second guesses for n cards as a Haskell-like list.
 findOptimal :: [String] -> IO ()
 findOptimal [] = fail "findOptimal requires one integer argument"
 findOptimal (sn:_) = do
@@ -76,7 +80,7 @@ findOptimal (sn:_) = do
             not $ null best]
     putStrLn $ renderStyle (Style PageMode 200 1) (dumpDoc result)
 
--- | Converts
+-- | Converts a selection to a simple human-friendly list of cards.
 selectionToString :: Selection -> String
 selectionToString = unwords . map show
 
