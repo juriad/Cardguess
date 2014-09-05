@@ -5,6 +5,7 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 \usepackage{url}
+\usepackage[super]{nth}
 \DeclareGraphicsExtensions{.pdf,.png,.jpg,.eps}
 \begin{document}
 \title{Declarative programming: Cardguess project}
@@ -15,11 +16,29 @@
 \section{Overview of the main algorithm}
 
 Our Cardguess implementation follows the optimal strategy hinted in the project specification.
-The Game\-State stores list of all possible answers.
+The Game\-State stores list of all possible answers and also number of guesses which have been tried.
 The function initialGuess simply selects one of the precomputed first guesses and returns list of all subsets of a single deck of card of the given size.
 The function nextGuess first filters the list leaving only combinations which don't contradict with any previous pair of guess -- feedback.
 Filtering is done by comparing the feedback from answerer with a feedback which would each of card combinations give with our last guess.
-When the list of options is shorten, we find the best option out of the remaining options.
+When the list of options is shortened, we find the best option out of the remaining options.
+
+\subsection{Description of modules}
+
+The problem was separated into logical units which are easier to test and also easier to replace, which proved to be valuable.
+The division is as follows:
+\begin{itemize}
+\item Common -- wraps Card and gives many types which are used in the rest of the solution.
+	It also contains function which are useful for testing.
+\item Feedback -- calculates answerer's feedback for given guess and answer.
+	Although there are several functions, only one is exported.
+\item OptimalN -- provides a Map which contains optimal second guesses based on previous feedback.
+	These modules are mostly generated; we only fixed indentation and wrote module header.
+\item Optimalguess -- provides three high-level functions related to lists of options and selecting the next guess.
+	The rest of this text is mostly about development of this module.
+\item Cardguess -- combines everyhing together in functions listed in specification.
+\item Main -- a testing suit which can be used as a standalone interface to the game.
+	It utilizes many \nth{3} party packages, but as it is not an essential part of the solution, it doesn't matter.
+\end{itemize}
 
 \section{Selecting next guess}
 
@@ -41,11 +60,12 @@ From list of all possible pairs of option and its mean (rating) is the best sele
 \section{Precomputation}
 
 Haskell program could find the best initial guess for answers consisting of one and two cards very quickly.
-The computation for three cards took 3 hours but unfortunately we don't remember if the program was compiled with optimizations or run in ghci.
+The computation for three cards took 3 hours but unfortunately we don't remember if the program was compiled with optimization enabled or run in ghci.
 Either way, it would still take too long to compute optimal first guess for four cards combinations.
 
 We developed a program in C which is very similar to the Haskell one but runs much faster.
-We also cut the options to try to about one fifth because for the first guess it is not interesting what the suits are as long as:
+We also cut the number of options to try to about one fifth by introduction of symmetry breaking constraints.
+Is is possible for the first guess; it is not interesting what the suits are as long as:
 \begin{enumerate}
 \item all used suits when numbered from zero are without gaps;
 \item if a rank $r$ is used with suit $s$ then a rank $r' < r$ cannot be used for suit $s' > s$.
@@ -54,21 +74,23 @@ This way we could get the optimal first guess for four cards combinations in abo
 We also noticed that the biggest group after the initial guess contains 11844 options which means that in order to compute the rating we need to run feedback function $11844^2$ times.
 
 Having the optimal first guess, we needed to make the second guess quicker.
-We tried to optimize work with Map (that gives us a log factor in time complexity) or optimize feedback function which is called more than million times.
+We tried to optimize work with Map (that gives us a log factor in time complexity) or optimize feedback function which is called more than a million times.
 Neither of these options could make the program run more than twice as quick; we were stuck at about 30 seconds per solution on average for four cards.
 
 The next step involved precomputation of optimal second guesses.
 We could use our existing Haskell solution and just run part of it in a loop -- for all feedbacks (we already know out first guess).
 The number of feedbacks in theory is up to $(n+1)^5$ where $n$ is number of cards to guess.
-But in practice the number is way lower, for four card answers it is only 284 (those are feedbacks which leaves at least one card possible).
+But in practice the number is way lower, for 4-card answers it is only 284 of them (those are feedbacks which leave at least one card possible).
 We precomputed the optimal second guess for all possible feedbacks and saved it into a file which was than formatted to become a valid Haskell source file.
 
-With all these optimizations and precomputations, the guessing became much faster; for the main case -- 2-card guessing game even breaking the limit.
-Guessing all 1326 possible 2-card answers took 11.9 seconds prior to optimizations and 2.3 seconds after.
-The difference is more noticeable for 3-card guessing game: 201 minutes and 4 seconds prior to and 3 minutes and 8 seconds after the optimizations.
+With all optimization and precomputationi applied, the guessing became much faster; for the main case -- 2-card guessing game even breaking the limit.
+Guessing all 1326 possible 2-card answers took 11.9 seconds prior to optimization and 2.3 seconds after.
+The difference is more noticeable for 3-card guessing game: 201 minutes and 4 seconds prior to and 3 minutes and 8 seconds after the optimization.
 We didn't run all the games with 4 cards -- just 1000 of them.
 They took 2 minutes and 17 seconds which is 0.13 seconds per one answer.
-Latter tests showed that this number is below average; it takes usually about 0.2 seconds which is still better than 10 seconds, which was the original desired goal.
+Latter tests showed that this number is below average; it usually takes about 0.2 seconds which is still better than 10 seconds, which was the original desired goal.
+
+\pagebreak
 
 \section{Other versions}
 
@@ -79,7 +101,7 @@ During the development several ambitious attempts were made to make the result b
 The idea was (in C) to find the best first guess not based on the distribution of feedbacks after the initial guess but rather on number of steps needed to solve all possible games.
 This approach worked for 1-card games and implemented and optimized found the optimal solution in 10 seconds.
 The solution surprisingly was not the same as the one based on distributions; the optimal should have been 7C or 9C in comparison to 8C which is in the middle.
-Because the number of steps to solve all instances of the 1-card game differed just by ones, we didn't used this solution.
+Because the number of steps to solve all instances of the 1-card game differed just by ones, we didn't use this solution.
 
 The run time for 2-card game would be enormous if we let the computer work; we stopped computaton after 10 minutes.
 In that time not a single two card combination out of 1326 of them was rated.
@@ -87,8 +109,8 @@ In that time not a single two card combination out of 1326 of them was rated.
 \subsection{Look ahead a few rounds}
 
 When we could finish any game in less than one second and we were left (after two precomputed guesses) with list of options which contained only hundreds of them, we could utilize the remaining time to find a better guess for the third and following rounds.
-We planned to introduce strategy which would switch the lookup based on number of remaining options, number of cards and current round.
-This ran in a finit time but it was much harder to rate particular guesses in several levels; it was based on an ordinary MIN-MAX searching algorithm without cutting branches.
+We planned to introduce strategy which would switch the look-up based on number of remaining options, number of cards and current round.
+This ran in finite time but it was much harder to rate particular guesses in several levels; it was based on an ordinary MIN-MAX searching algorithm without cutting branches.
 It worked nice -- it preferred a guess which would with several optimal next guesses distribute the feedbacks best.
 Unfortunately, in third guess even with a small look ahead (1 or 2) we got very often a prediction of a perfect distribution -- all groups containing only one combination -- the answers.
 It was a correct guess but not the optimal one because it tended to waste -- it chose non-optimal guess which would still give optimal distribution in several rounds.
@@ -135,5 +157,19 @@ During development of the project we also used several packages; most of them wo
 We wanted to use a package serving as a C binding for readline, but this proved to be impossible.
 There is a bug in GHC which prevents building the package without changing the library file \texttt{/usr/lib/libncurses.so}.
 Link to the issue: \url{https://ghc.haskell.org/trac/ghc/ticket/9237}.
+
+\section{Conclusion}
+
+Our solution is not only nearly optimal in terms of number of guesses but also in running speed which is way below the specified time limit.
+The project is available online at \url{https://github.com/juriad/Cardguess}.
+
+We have to admit that our solution is not optimal as we found a better solution for 1-card game which minimize number of guesses across all possible games.
+However, usage of this approach shown to be at least impractical and too slow for bigger instances of the problem.
+It could have been optimized by heuristics and cutting unpromissing search branches, for example by implementing A* algorithm.
+
+We also proved to be untrue the hint claiming that for the first guess it is best to pick cards with ranks which divide the sequence 2-A into equal chunks.
+Much better strategy is to pick ranks which divide the sequence into three equal chunks with the remainig guessed cards being in the middle one.
+On the other hand, we couldn't prove this is the best one.
+For 2-card game we even found out that choosing the middle rank is suboptimal for strategy rating guesses by distribution of potencial feedbacks.
 
 \end{document}

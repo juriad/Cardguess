@@ -26,8 +26,8 @@ import Data.List (sort)
 import Data.Random (sampleState)
 import Data.Random.Extras (sample)
 import System.Random (StdGen, getStdRandom)
-import Text.PrettyPrint
-import Text.Show.Pretty
+import Text.PrettyPrint (Mode (..), Style (..), renderStyle)
+import Text.Show.Pretty (PrettyVal (..), Value (..), dumpDoc)
 
 
 {- | Ignore the orphan instance warning.
