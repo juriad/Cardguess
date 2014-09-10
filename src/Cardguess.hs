@@ -1,6 +1,7 @@
 -- File: Cardguess.hs
 -- Author: Adam Juraszek
 -- Purpose: Prescribed interface of the solution exposed to the world.
+-- Source: https://github.com/juriad/Cardguess
 
 {- | Module Cardguess contains prescribed functions to solve the problem of
     finding selected cards (0-4) with minimal number of guesses.

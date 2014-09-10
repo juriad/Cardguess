@@ -1,6 +1,7 @@
 -- File: Feedback.hs
 -- Author: Adam Juraszek
 -- Purpose: Function evaluating feedback for a guess and answer.
+-- Source: https://github.com/juriad/Cardguess
 
 {- | Module Feedback wraps the function rateGuess which gives feedback
     to guess which is evaluated against answer.

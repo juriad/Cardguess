@@ -1,17 +1,13 @@
 -- File: Optimal2.hs
 -- Author: Adam Juraszek
 -- Purpose: Partly generated map of optimal second guesses for 2 cards answers.
-
-{-# OPTIONS_GHC -fno-warn-type-defaults #-}
+-- Source: https://github.com/juriad/Cardguess
 
 module Optimal2 where
 
 import Common
 
-import Data.Map.Strict as Map
-
-
-default (Int)
+import Data.Map as Map
 
 
 optimal2 :: Map.Map Feedback Selection

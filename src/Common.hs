@@ -1,6 +1,7 @@
 -- File: Common.hs
 -- Author: Adam Juraszek
 -- Purpose: Definitions of commonly used types.
+-- Source: https://github.com/juriad/Cardguess
 
 {- | Module Common wraps module Card and adds several useful type definitions
     which are used in all other modules in order to simplify function types.

@@ -1,6 +1,7 @@
 -- File: Main.hs
 -- Author: Adam Juraszek
 -- Purpose: Executable read-eval-loop program useful for testing.
+-- Source: https://github.com/juriad/Cardguess
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 

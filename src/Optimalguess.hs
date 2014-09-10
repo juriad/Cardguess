@@ -1,6 +1,7 @@
 -- File: Optimalguess.hs
 -- Author: Adam Juraszek
 -- Purpose: Algorithms which select the optimal next guess.
+-- Source: https://github.com/juriad/Cardguess
 
 {- | Module Optimalguess provides functions which operate with list of all
     possible answers.
@@ -19,7 +20,8 @@ import Optimal4
 
 -- should be better for arithmetic expression folding
 import Data.List (foldl1')
-import qualified Data.Map.Strict as Map
+-- Version installed of package containers on the testing server is: 0.4.0.0
+import qualified Data.Map as Map
 import Data.Maybe (fromJust)
 
 
@@ -54,7 +56,7 @@ rateGuessByExpectedAnswers :: Selection -> [Selection] -> Rating
 rateGuessByExpectedAnswers guess answers =
     let groupedByFeedback =
             Map.fromListWith (+) [(rateGuess guess ans, 1) | ans <- answers]
-    in Map.foldl' (\ val acc -> val * val + acc) 0 groupedByFeedback
+    in Map.fold (\ val acc -> val * val + acc) 0 groupedByFeedback
 
 -- | Selects the best card combination to be used as our next guess.
 findBestGuess :: [Selection] -> (Rating, Selection)
